@@ -1,7 +1,27 @@
+# Podman/Docker build context — sadece gerekli dosyalar dahil
 *
 !rembg
 !pyproject.toml
 !poetry.lock
 !README.md
 !.git
+!Containerfile
+!Dockerfile
+
+# Hassas dosyalar asla dahil edilmez
 .env
+.env.*
+*.pem
+*.key
+*.secret
+
+# Cache / geçici dosyalar
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.mypy_cache
+
+# Geliştirme araçları
+.vscode
+.idea

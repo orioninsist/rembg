@@ -1,0 +1,63 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# podman-compose.yml — Rembg Web UI
+#
+# Kullanım:
+#   podman-compose up -d
+#   podman-compose down
+#   podman-compose logs -f
+#
+# Not: podman-compose kurmak için:
+#   pip install podman-compose
+#   veya: pipx install podman-compose
+# ─────────────────────────────────────────────────────────────────────────────
+version: "3.8"
+
+services:
+  rembg:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: rembg-web:latest
+    container_name: rembg
+    restart: unless-stopped
+
+    ports:
+      - "${REMBG_PORT:-7000}:7000"
+
+    volumes:
+      # Kalıcı model cache — her container yeniden başlatmada modeli indirmez
+      # :Z = Podman SELinux label (Docker'da bu gerekli değildir)
+      - rembg-models:/root/.u2net:Z
+
+    environment:
+      # Opsiyonel — Python optimize modu
+      - PYTHONOPTIMIZE=1
+      # Onnxruntime thread sayısı (0 = otomatik)
+      - OMP_NUM_THREADS=0
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7000/api"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
+    # Kaynak limitleri (opsiyonel — ihtiyaca göre ayarlayın)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 4G
+    #     reservations:
+    #       memory: 1G
+
+    labels:
+      - "app=rembg"
+      - "version=latest"
+      - "description=AI Background Removal Web UI"
+
+volumes:
+  rembg-models:
+    driver: local
+    labels:
+      - "app=rembg"
+      - "description=Rembg AI model cache (persistent)"
